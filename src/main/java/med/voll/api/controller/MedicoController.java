@@ -60,4 +60,3 @@ public class MedicoController {
 
 }
 
-/*POR PADRÃO o SpringBoot para exceções não tratadas no código, são interpretadas com o erro 500*/
