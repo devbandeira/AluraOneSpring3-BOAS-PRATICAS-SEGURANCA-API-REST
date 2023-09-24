@@ -9,6 +9,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("medicos")
@@ -19,9 +22,25 @@ public class MedicoController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados) {
-        /*Aqui vai ser um pouco dif pq o cadastrar retorna o codigo 201 e ele tem um tratamento diferenciado*/
-        repository.save(new Medico(dados));
+    public ResponseEntity cadastrar(@RequestBody @Valid DadosCadastroMedico dados, UriComponentsBuilder uriBuilder) {
+        /*Aqui vai ser um pouco dif pq o cadastrar retorna o codigo 201 "created" e ele tem um tratamento diferenciado*/
+        /*Devolve no corpo da resposta os dados do novo recurso/registro criado e tbm tem que devoler o
+        * cabeçalho do protocolo HTTP (location) que é para mostrar o endereço de onde esse dado acabou de ser
+        * cadastrado e possa ser localizado*/
+
+        var medico = new Medico(dados);
+        repository.save(medico);
+
+        /*A URI tem que ser o endereço da nossa API. Ja temos uma classe no spring que encapsula o endereço
+        * da URI sozinho. No método cadastrar vou declarar mais um parametro UriComponentsBuilder*/
+        /*.path() para passar o complemento da url, pois nesse caso só vai criar o localhost:8080*/
+        /*uso o buildAndExpand() e passo a URI que acabou de ser criado, o ID está na repository.save(new Medico(dados));
+        * mas preciso conseguir pegar o new Medico que criei e passei, então vou joar dentro de uma variavel*/
+        var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(medico.getId()).toUri();/*toUri() para criar o objeto URI*/
+        /*Spring vai criar o cabeçalho LOCATION automaticamente baseado na URI que eu pasasr como parametro
+        * em seguida passo o body() para dizer qual a informação que quero devolver no corpo da resposta
+        * e cria o obj respondeentity*/
+        return ResponseEntity.created(uri).body(new DadosDetalhamentoMedico(medico));/*Vou usar o mesmo DTO que usei no atualizar*/
     }
 
     @GetMapping
