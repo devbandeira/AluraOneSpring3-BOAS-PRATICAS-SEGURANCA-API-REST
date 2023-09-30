@@ -3,6 +3,7 @@ package med.voll.api.controller;
 import jakarta.validation.Valid;
 import med.voll.api.domain.usuario.DatosAutenticacao;
 import med.voll.api.domain.usuario.Usuario;
+import med.voll.api.infra.exception.security.DadosTokenJWT;
 import med.voll.api.infra.exception.security.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,16 +22,18 @@ public class AutenticacaoController {
     private AuthenticationManager manager;
 
     @Autowired
-    private TokenService tokenService;/*tomar cuidado para não importar a propria classe do spring TokenService*/
+    private TokenService tokenService;
 
     @PostMapping
     public ResponseEntity efetuarLogin(@RequestBody @Valid DatosAutenticacao dados){
 
-        var token = new UsernamePasswordAuthenticationToken(dados.login(), dados.senha());
-        var authentication = manager.authenticate(token); /*esse objt representa o usuario que tem a autenticação*/
+        var AuthenticationToken = new UsernamePasswordAuthenticationToken(dados.login(), dados.senha());
+        var authentication = manager.authenticate(AuthenticationToken);/*Se ele n achar o user, ele vai logo jogar o 403*/
 
-        return ResponseEntity.ok(tokenService.gerarToken((Usuario) authentication.getPrincipal()));/*authentication.getPrincipal() -> Para pegar o user atual logado
-        vai dar erro porque esse authentication.getPrincipal() devolve um OBJECT e então fazemos um CASTING*/
+        /*Se a autenticação falhar, cair em user que n existe, ele não fará essas duas linhas para retornar o jwt. Vai 403 automaticamente*/
+        var tokenJWT = tokenService.gerarToken((Usuario) authentication.getPrincipal());
+
+        return ResponseEntity.ok(new DadosTokenJWT(tokenJWT));
 
 
     }
