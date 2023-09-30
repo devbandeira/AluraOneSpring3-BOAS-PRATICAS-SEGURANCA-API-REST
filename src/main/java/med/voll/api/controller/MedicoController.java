@@ -31,8 +31,13 @@ public class MedicoController {
 
     @GetMapping
     public ResponseEntity<Page<DadosListagemMedico>> listar(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
+        /*preciso por um código aqui antes que verifique se a pessoa possui a autenticação JWT para permitir fazer a consulta.
+        * podemos fazer igual ao TratadordeErros, onde o spring chama sozinho o código, para que eu não tenha que ficar repetindo
+        * código em todos os métodos*/
+        /*Temos que criar um filter ou um interceptor e colocar nosso codigo de validação nele, e ele vai fazer esse papel*/
         var page = repository.findAllByAtivoTrue(paginacao).map(DadosListagemMedico::new);
         return ResponseEntity.ok(page);
+
     }
 
     @PutMapping
