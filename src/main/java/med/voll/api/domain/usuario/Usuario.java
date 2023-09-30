@@ -19,9 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Usuario implements UserDetails {
-    /*Para o SPRING SECURITY reconhecer a class usuairo do nosso projeto, ele precisa saber. Não tem como saber o que é senha e login
-    * Então, implements UserDetails, interface do proprio SPRING SECURITY*/
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,16 +26,11 @@ public class Usuario implements UserDetails {
     private String senha;
 
 
-    /*Passar tudo para TRUE*/
-
-    /*Método de Controle de perfil*/
-    /*n vamos usar, mas tem que passar algo no retorno*/
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));/*Simulando*/
     }
 
-    /*troca null para senha e o outro para login*/
     @Override
     public String getPassword() {
         return senha;
