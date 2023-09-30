@@ -2,6 +2,7 @@ package med.voll.api.infra.exception.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,23 +21,24 @@ public class SecurityConfigurations {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
-        return http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().build();
+        return http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and().authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/login").permitAll()/*configurando se a url vai ser liberada ou não, pedindo para permitir todos, aqui ela é publica, o método POST pq para login é POST*/
+                .anyRequest().authenticated()/*Qualquer outra requisição a pessoa tem que etar autenticada*/
+                .and().build();
+
+        /*Na logica API é restrita para tudo, menos para LOGIN
+        * Ou seja, estou liberando a url /login e todas as outras bloqueadas*/
     }
 
-    /*Agora esta classe tem o método authenticationManager que sabe criar o objeto AuthenticationManager. Vai ficar dando erro
-    * pois este método pode lançar uma exception*/
-    @Bean /*Como to ensinando para o Spring como se injeta esse objeto, tem que ter anotação @Bean*/
+
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
-    /*PasswordEncoder -> Classe que representa o algotirimo de hash de senha.*/
-    /*ensinando ao spring que as senhas armazenadas são em Bcrypt*/
     @Bean
     public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();/*classe do proprio spring que conseguimos instanciar como uma class normal*/
+        return new BCryptPasswordEncoder();
     }
 }
-
-/* O @BEAN SERVE PARA EXPORTAR UMA CLASSE PARA O SPRING, FAZENDO COM QUE ELE CONSIGA CARREGÁ-LA E REALIZE A SUA INJEÇÃO
-DE DEPENDÊNCIA EM OUTRAS CLASSES*/
