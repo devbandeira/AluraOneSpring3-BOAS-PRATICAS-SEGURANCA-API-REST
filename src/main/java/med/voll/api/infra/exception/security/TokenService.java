@@ -3,6 +3,7 @@ package med.voll.api.infra.exception.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import med.voll.api.domain.usuario.Usuario;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,15 +25,32 @@ public class TokenService {
     public String gerarToken (Usuario usuario) {
         System.out.println(secret);/*para ver se ta lendo o default 12345678, qnd eu fazer a a requisição*/
         try {
+            /*codigo na doc da biblioteca oatho.io*/
             var algoritmo = Algorithm.HMAC256(secret);
             return JWT.create()
                     .withIssuer("API Voll.med")
-                    .withSubject(usuario.getLogin())
+                    .withSubject(usuario.getLogin())/*estou recuperando isso aqui caso seja valido la na classe SecurityFilter*/
                     .withClaim("id", usuario.getId())
                     .withExpiresAt(dataExpiracao())
                     .sign(algoritmo);
         } catch (JWTCreationException exception){
             throw  new RuntimeException("Erro ao gerar token JWT", exception);
+        }
+    }
+
+    public String getsubject(String tokenJWT){
+        /*Temos que verificar se o token ta valido e retornar para o user o subject armazenado no token*/
+        /*codigo na doc da biblioteca oatho.io*/
+
+        try {
+            var algoritmo = Algorithm.HMAC256(secret);
+            return JWT.require(algoritmo)
+                    .withIssuer("API Voll.med") /*verificando se o Issuer esta correto*/
+                    .build()
+                    .verify(tokenJWT)/*até aqui o codigo verifica se o token que esta chegando se esta valido de acordo com o Issuer e de acordo com o Algorithm*/
+                    .getSubject(); /*chegou até ali em cima, ta ok. Dai eu pego o getSubject*/
+        } catch (JWTVerificationException exception) {
+            throw new RuntimeException("Token JWT inválido ou expirado!");
         }
     }
 
